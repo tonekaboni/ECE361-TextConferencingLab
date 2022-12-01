@@ -70,7 +70,7 @@ void send_to_room(char *output, struct room *rm){
 }
 
 
-/////this fucker down here
+////
 int  find_roomw (char *room_name, struct room *rooms){
     //error ("made it");
     for (int i = 0; i < MAX_ROOMS; i ++ ){
@@ -94,7 +94,7 @@ int  add_to_room (struct user *sender, struct room *rm){
             rm->num_members ++;
             rm->members[i] = sender;
             //sender->room_id = rm->name;
-            memcpy(sender->room_id, rm->name, strlen(rm->name)*sizeof(char));
+            strcpy(sender->room_id, rm->name);
 
             return 1;
         }
@@ -113,7 +113,7 @@ void kick_from_room (struct user *sender, struct room *rm){
             rm->members[i] = NULL;
             char * pp = "INVALID_ROOM";
             bzero(sender->room_id, 20); 
-            memcpy(sender->room_id, pp, strlen(pp)*sizeof(char));
+            strcpy(sender->room_id, pp);
             //sender->room_id = "INVALID_ROOM";
             return ;
         }
@@ -175,8 +175,8 @@ int command_parser(char *token, int client_socket){
     
     //8 = invalid command
 
-    //if (message[0]!="/")
-    //    return 0;
+    if (token[0]!='/')
+        return 0;
     //perror (message);
     //send_to(message, client_socket); 
     //char * token = strtok(message, " ");
@@ -211,6 +211,7 @@ int command_parser(char *token, int client_socket){
 int receive_message(int client_socket, struct user *users, struct room rooms[]){
 
     char message[BUFFER_SIZE];
+    char cpy[BUFFER_SIZE];
     //char output[BUFFER_SIZE];
     bzero(message,BUFFER_SIZE );
     //printf("received");
@@ -218,7 +219,8 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
     //printf("received: %s", message);
     //send_to(&pp, client_socket); 
     perror (message);
-    char * token = strtok(message, " ");
+    strcpy(cpy, message);
+    char * token = strtok(cpy, " ");
     int command = command_parser(token,client_socket);
     char  pp = (char)('0'+command);
     //perror (&pp);
@@ -280,10 +282,12 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
             char output[BUFFER_SIZE];
             bzero(output, BUFFER_SIZE); 
             memcpy(output,sender->name, strlen(sender->name)*sizeof(char));
+
             char * mm = strtok(NULL, " ");
             char * pp = ": ";
             strcat(output, pp);
             strcat(output, mm);
+            strcat(output, message);
             int ind = find_roomw(sender->room_id, rooms);
             struct room rm = rooms[ind];
             send_to_room(output, &rm);
@@ -294,12 +298,12 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         return 0;
 
     }else if (command == 2){//logout
-        char *output = "you have been logged out";
-        send_to(output, client_socket); 
+        //char *output = "you have been logged out";
+        //send_to(output, client_socket); 
         sender->sock = INVALID_SOCKET;
-        char * pp = "INVALID_ROOM";
+        char * pp = "INVALID";
         bzero(sender->room_id, 20); 
-        memcpy(sender->room_id,pp,strlen(pp)*sizeof(char));
+        strcpy(sender->room_id,pp);
         //sender->room_id = "INVALID_ROOM";
         sender->logged_in = false;
         close(client_socket);
@@ -313,7 +317,7 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         }
      
         char * room_name = strtok(NULL, " ");
-        int ind = find_roomw(sender->room_id, rooms);
+        int ind = find_roomw(room_name, rooms);
         
         if (ind == 100){
             char *output = "Invalid room name";
