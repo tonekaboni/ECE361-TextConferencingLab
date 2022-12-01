@@ -306,11 +306,11 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
             }
           //    perror("7");
             send_to_room(output, rm);
-           
+           return 0;
         }
-        char *out = "message received";
-        send_to(out, client_socket); 
-        return 0;
+        //char *out = "message received";
+        //send_to(out, client_socket); 
+        
 
     }else if (command == 2){//logout
         //char *output = "you have been logged out";
@@ -460,25 +460,121 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
 
 
     }else if (command == 8){//kick 
-
-        char * username = strtok(NULL, " ");
-        struct user * user_to_kick = find_user_name(username, users);
-
-        if(user_to_kick){
-            if(user->logged_in){
-                if(find_roomw(user->room_id, rooms) == find_roomw(users[0]->room_id, rooms)){
-
-                        
-
-                }
-            } else {
-                perror("User not logged in");
-            }
-        } else {
-            perror("No user");
+        
+        if ( strcmp(sender->room_id , "INVALID_ROOM")==0){
+            char *output = "you are not in a room";
+            send_to(output, client_socket); 
+            return 0;
+        }
+        struct room * rm = find_roomw(sender->room_id, rooms);
+        if ( rm==NULL){
+            char *output = "you are not in a room";
+            send_to(output, client_socket); 
+            return 0;
         }
 
+        if (rm->members[0] != sender ){
+            char *output = "you are not the admin";
+            send_to(output, client_socket); 
+            return 0;
+
+        }
+
+        char * target_name = strtok(NULL, " ");
+        if (target_name == NULL){
+            char *output = "invalid command";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        struct user * user_to_kick = find_user_name(target_name, users);
+
+        if (user_to_kick == NULL){
+            char *output = "invalid target";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        if (user_to_kick->logged_in == false || strcmp(user_to_kick->room_id , "INVALID_ROOM")==0 || strcmp(user_to_kick->room_id, sender->room_id) !=0 ){
+            char *output = "target not here";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        
+        kick_from_room(user_to_kick, rm);
+        char *output = "target booted";
+        send_to(output, client_socket);
+        char *out = "you have been booted";
+        send_to(out, user_to_kick->sock);
+        return 0;
+
+       
     }else if (command == 9){//swithc admin 
+
+        if ( strcmp(sender->room_id , "INVALID_ROOM")==0){
+            char *output = "you are not in a room";
+            send_to(output, client_socket); 
+            return 0;
+        }
+        struct room * rm = find_roomw(sender->room_id, rooms);
+        if ( rm==NULL){
+            char *output = "you are not in a room";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        if (rm->members[0] != sender ){
+            char *output = "you are not the admin";
+            send_to(output, client_socket); 
+            return 0;
+
+        }
+
+        char * target_name = strtok(NULL, " ");
+        if (target_name == NULL){
+            char *output = "invalid command";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        struct user * user_to_kick = find_user_name(target_name, users);
+
+        if (user_to_kick == NULL){
+            char *output = "invalid target";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        if (user_to_kick->logged_in == false || strcmp(user_to_kick->room_id , "INVALID_ROOM")==0 || strcmp(user_to_kick->room_id, sender->room_id) !=0 ){
+            char *output = "target not here";
+            send_to(output, client_socket); 
+            return 0;
+        }
+
+        rm->members[0] = user_to_kick;
+
+
+
+        for (int i = 1; i < 10; i ++ ){
+            struct user *member = rm->members[i];
+            if (member==user_to_kick){
+                
+                rm->members[i] = sender;
+                //sender->room_id = rm->name;
+                
+                break;
+            }
+        
+        } 
+        
+
+
+        char *output = "You are no longer the boss";
+        send_to(output, client_socket);
+        char *out = "hello boss man";
+        send_to(output, user_to_kick->sock);
+        return 0;
 
     }else {
         char *output = "invalid command";

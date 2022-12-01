@@ -44,22 +44,22 @@ void main(int argc, char const * argv[]){
 		fgets(input, 100, stdin);
         //scanf("%s",input);
 		char* rest = input;
-		printf("input: %s\n",input);
+		//printf("input: %s\n",input);
         char *command = strtok_r  (rest, " ", &rest);
 		//printf("command: %s\n",command);
 		char *name = strtok_r  (rest, " ", &rest);
-		printf("name: %s\n",name);
+		//printf("name: %s\n",name);
 		char *password = strtok_r  (rest, " ", &rest);
-		printf("pass: %s\n",password);
+		//printf("pass: %s\n",password);
 		char *s_addr = strtok_r  (rest, " ", &rest);
-		printf("address: %s\n",s_addr);
+		//printf("address: %s\n",s_addr);
 		char *port = strtok_r  (rest, " ", &rest);
 		if (strcmp(command, "/login")!= 0){
 			printf("you need to log in\n");
 		}else{
 			
 			
-			printf("port: %s\n",port);
+			//printf("port: %s\n",port);
 			struct sockaddr_in servaddr;
 			struct addrinfo *servinfo;
 			struct addrinfo hints;
