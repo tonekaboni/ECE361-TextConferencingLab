@@ -281,12 +281,12 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         }else {
             char output[BUFFER_SIZE];
             bzero(output, BUFFER_SIZE); 
-            memcpy(output,sender->name, strlen(sender->name)*sizeof(char));
+            strcpy(output,sender->name);
 
-            char * mm = strtok(NULL, " ");
+            //char * mm = strtok(NULL, " ");
             char * pp = ": ";
             strcat(output, pp);
-            strcat(output, mm);
+            //strcat(output, mm);
             strcat(output, message);
             int ind = find_roomw(sender->room_id, rooms);
             struct room rm = rooms[ind];
