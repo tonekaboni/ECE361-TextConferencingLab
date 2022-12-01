@@ -461,6 +461,23 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
 
     }else if (command == 8){//kick 
 
+        char * username = strtok(NULL, " ");
+        struct user * user_to_kick = find_user_name(username, users);
+
+        if(user_to_kick){
+            if(user->logged_in){
+                if(find_roomw(user->room_id, rooms) == find_roomw(users[0]->room_id, rooms)){
+
+                        
+
+                }
+            } else {
+                perror("User not logged in");
+            }
+        } else {
+            perror("No user");
+        }
+
     }else if (command == 9){//swithc admin 
 
     }else {
