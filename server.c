@@ -58,11 +58,13 @@ void send_to(char *output, int client_socket){
 
 void send_to_room(char *output, struct room *rm){
     for (int i = 0; i < 10; i ++ ){
-        struct user *member = rm->members[i];
-        if (member != NULL){
-            if (member->sock != INVALID_SOCKET){
-
-                send_to(output,member->sock);
+        perror("loop");
+        //struct user *member = rm->members[i];
+        if (rm->members[i] != NULL){
+            perror("between");
+            if (rm->members[i]->sock != INVALID_SOCKET){
+                 perror("send");
+                send_to(output,rm->members[i]->sock);
             }
         }
 
@@ -71,17 +73,17 @@ void send_to_room(char *output, struct room *rm){
 
 
 ////
-int  find_roomw (char *room_name, struct room *rooms){
+struct room *  find_roomw (char *room_name, struct room *rooms){
     //error ("made it");
     for (int i = 0; i < MAX_ROOMS; i ++ ){
         
         if (strcmp(rooms[i].name,room_name)==0){
             
-            return i;
+            return &(rooms[i]);
         }
     }
     //error ("made it");
-    return 100;
+    return NULL;
 }
 
 int  add_to_room (struct user *sender, struct room *rm){
@@ -94,6 +96,7 @@ int  add_to_room (struct user *sender, struct room *rm){
             rm->num_members ++;
             rm->members[i] = sender;
             //sender->room_id = rm->name;
+            bzero(sender->room_id, 20); 
             strcpy(sender->room_id, rm->name);
 
             return 1;
@@ -214,6 +217,7 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
     char cpy[BUFFER_SIZE];
     //char output[BUFFER_SIZE];
     bzero(message,BUFFER_SIZE );
+    bzero(cpy,BUFFER_SIZE );
     //printf("received");
     recv(client_socket, message, BUFFER_SIZE, NULL);
     //printf("received: %s", message);
@@ -267,31 +271,38 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
     }
 
     if (command == 0){// send text
-
+         perror("1");
         if (sender->logged_in == false){
             char *output = "You are not logged in";
             send_to(output, client_socket); 
             return 0;
-            
+         perror("2");    
         }else if (strcmp(sender->room_id , "INVALID_ROOM")==0){
             char *output = "You are not in any room";
             send_to(output, client_socket); 
             return 0;
            
-        }else {
+        }else  perror("3");
+        {
             char output[BUFFER_SIZE];
             bzero(output, BUFFER_SIZE); 
             strcpy(output,sender->name);
-
+             perror("4");
             //char * mm = strtok(NULL, " ");
             char * pp = ": ";
             strcat(output, pp);
             //strcat(output, mm);
             strcat(output, message);
-            int ind = find_roomw(sender->room_id, rooms);
-            struct room rm = rooms[ind];
-            send_to_room(output, &rm);
-            
+            perror("6");
+            struct room *rm =find_roomw(sender->room_id, rooms);
+            if (rm == NULL){error (sender->room_id);
+                char *put = "You are not in any room";
+                send_to(put, client_socket); 
+               return 0;
+            }
+              perror("7");
+            send_to_room(output, rm);
+           
         }
         char *out = "message received";
         send_to(out, client_socket); 
@@ -310,23 +321,41 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         return 1;
 
     }else if (command == 3){//join session
-        struct room rm;
+        
         if (strcmp(sender->room_id , "INVALID_ROOM")!=0){
-            rm = rooms[find_roomw (sender->room_id, rooms)];
-            kick_from_room (sender, &rm);
+            struct room *rm1 = find_roomw (sender->room_id, rooms);
+            kick_from_room (sender, rm1);
         }
      
         char * room_name = strtok(NULL, " ");
-        int ind = find_roomw(room_name, rooms);
+        struct room *rm = find_roomw(room_name, rooms);
         
-        if (ind == 100){
+        if (rm == NULL){
             char *output = "Invalid room name";
             send_to(output, client_socket); 
             return 0;
         }
-        rm = rooms[ind];
+        int t ;
+       // if (rm->num_members == 10)
+        t  = 0;
+
+        for (int i = 0; i < 10; i ++ ){
+            struct user *member = rm->members[i];
+            if (member==NULL){
+                rm->num_members ++;
+                rm->members[i] = sender;
+                //sender->room_id = rm->name;
+                bzero(sender->room_id, 20); 
+                strcpy(sender->room_id, rm->name);
+
+                t =  1;
+                break;
+            }
+        
+        } 
+    //return 0;
         //sender->room_id = rm;
-        if (add_to_room (sender, &rm) == 0){
+        if (t == 0){
             char *output = "not enough space in room";
             send_to(output, client_socket); 
             return 0;
@@ -345,11 +374,11 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         char * ppp = malloc(30*sizeof(char));
         bzero(ppp, 30); 
         strcpy(ppp, sender->room_id);
-        perror("before find");
-        int idx = find_roomw (ppp, rooms);
-        perror("after find");
-        struct room rm = rooms[idx];
-        kick_from_room (sender, &rm);   
+        //perror("before find");
+       
+       // perror("after find");
+        struct room* rm =find_roomw (ppp, rooms);
+        kick_from_room (sender, rm);   
         
         
         char *output = "you have been booted from the room";
@@ -362,9 +391,9 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         char * room_name = strtok(NULL, " ");
         
         //perror("start");
-        int ind = find_roomw(sender->room_id, rooms);
+        struct room * rm = find_roomw(sender->room_id, rooms);
         perror("1");
-        if (ind != 100){
+        if (rm != NULL){
             char *output = "room already exists";
             send_to(output, client_socket); 
             return 0;
