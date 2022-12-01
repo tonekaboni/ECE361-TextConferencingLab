@@ -58,12 +58,12 @@ void send_to(char *output, int client_socket){
 
 void send_to_room(char *output, struct room *rm){
     for (int i = 0; i < 10; i ++ ){
-        perror("loop");
+        //perror("loop");
         //struct user *member = rm->members[i];
         if (rm->members[i] != NULL){
-            perror("between");
+            //perror("between");
             if (rm->members[i]->sock != INVALID_SOCKET){
-                 perror("send");
+                 //perror("send");
                 send_to(output,rm->members[i]->sock);
             }
         }
@@ -204,10 +204,14 @@ int command_parser(char *token, int client_socket){
     if (strcmp(token , "/list") == 0)
         return 6;
 
-    if (strcmp(token , "/quit") == 0)
+    if (strcmp(token , "/dm") == 0)
         return 7;
+    if (strcmp(token , "/kick") == 0)
+        return 8;
+    if (strcmp(token , "/switch") == 0)
+        return 9;
 
-    return 8;
+    return 10;
  
 }
 
@@ -219,10 +223,10 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
     bzero(message,BUFFER_SIZE );
     bzero(cpy,BUFFER_SIZE );
     //printf("received");
-    recv(client_socket, message, BUFFER_SIZE, NULL);
+    recv(client_socket, message, BUFFER_SIZE, 0);
     //printf("received: %s", message);
     //send_to(&pp, client_socket); 
-    perror (message);
+    //perror (message);
     strcpy(cpy, message);
     char * token = strtok(cpy, " ");
     int command = command_parser(token,client_socket);
@@ -271,36 +275,36 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
     }
 
     if (command == 0){// send text
-         perror("1");
+      //  perror("1");
         if (sender->logged_in == false){
             char *output = "You are not logged in";
             send_to(output, client_socket); 
             return 0;
-         perror("2");    
+        // perror("2");    
         }else if (strcmp(sender->room_id , "INVALID_ROOM")==0){
             char *output = "You are not in any room";
             send_to(output, client_socket); 
             return 0;
            
-        }else  perror("3");
+        }else  //perror("3");
         {
             char output[BUFFER_SIZE];
             bzero(output, BUFFER_SIZE); 
             strcpy(output,sender->name);
-             perror("4");
+            // perror("4");
             //char * mm = strtok(NULL, " ");
             char * pp = ": ";
             strcat(output, pp);
             //strcat(output, mm);
             strcat(output, message);
-            perror("6");
+           // perror("6");
             struct room *rm =find_roomw(sender->room_id, rooms);
-            if (rm == NULL){error (sender->room_id);
+            if (rm == NULL){
                 char *put = "You are not in any room";
                 send_to(put, client_socket); 
                return 0;
             }
-              perror("7");
+          //    perror("7");
             send_to_room(output, rm);
            
         }
@@ -311,6 +315,10 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
     }else if (command == 2){//logout
         //char *output = "you have been logged out";
         //send_to(output, client_socket); 
+         if (strcmp(sender->room_id , "INVALID_ROOM")!=0){
+            struct room *rm1 = find_roomw (sender->room_id, rooms);
+            kick_from_room (sender, rm1);
+        }
         sender->sock = INVALID_SOCKET;
         char * pp = "INVALID";
         bzero(sender->room_id, 20); 
@@ -392,7 +400,7 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         
         //perror("start");
         struct room * rm = find_roomw(sender->room_id, rooms);
-        perror("1");
+        //perror("1");
         if (rm != NULL){
             char *output = "room already exists";
             send_to(output, client_socket); 
@@ -418,6 +426,13 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         //send_to(output, client_socket); 
         return 0;
         
+    }else if (command == 7){//dm 
+    
+
+    }else if (command == 8){//kick 
+
+    }else if (command == 9){//swithc admin 
+
     }else {
         char *output = "invalid command";
         send_to(output, client_socket); 
@@ -544,7 +559,7 @@ void main(int argc, char const * argv[]){
 
         //printf("Before select\n");
         if (select(FD_SETSIZE, &ready_sockets,NULL,NULL,NULL) < 0){ 
-            perror("select failed"); 
+            //perror("select failed"); 
             exit(1); 
         } 
         //printf("after\n");

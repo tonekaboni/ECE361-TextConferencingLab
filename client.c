@@ -75,7 +75,8 @@ void main(int argc, char const * argv[]){
 
 			//Hints
 			
-			// /login user0 1234 128.100.13.170 11313138
+			// /login user0 1234 128.100.13.170 11313147
+			// /login user1 1234 128.100.13.170 11313147
 			/****************************************Server Connection********************************************/
 			//Length of client address
 			int sockfd = 0; 
@@ -119,16 +120,23 @@ void main(int argc, char const * argv[]){
 					bzero(buffer, 1024);
 					
 					fgets(buffer, 100, stdin);
-					 if (strcmp(buffer,"/quit" )==0){
+					 if (strncmp(buffer,"/quit", 5 )==0){
+						char * tp = "/logout ";
+						send(sockfd, tp, strlen(tp), 0);
 						pthread_cancel(listener);
 						return;
 					 }
 					 printf("sending: %s\n", buffer);
-					send(sockfd, buffer, strlen(buffer), 0);
-					if (strcmp(buffer,"/logout" )==0){
-						pthread_join(listener, NULL);
+					
+					if (strncmp(buffer,"/logout \n" ,7)==0){
+						
+						pthread_cancel(listener);
+						send(sockfd, buffer, strlen(buffer), 0);
 						break;
+						
+						
 					}
+					send(sockfd, buffer, strlen(buffer), 0);
 				}
 
 			}
