@@ -1,10 +1,10 @@
 # Makefile You should also prepare a makefile that generates the executable file deliver from
 # deliver.c and the executable file server from server.c.
-CC=gcc -g
-all: server deliver
+CC=gcc -O0  -pthread
+all: server client
 # compile the client program
-deliver: deliver.o
+client: client.o
 # compile server program
 server: server.o
 clean:
-	rm -f *.o deliver server
+	rm -f *.o client server
