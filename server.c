@@ -427,7 +427,37 @@ int receive_message(int client_socket, struct user *users, struct room rooms[]){
         return 0;
         
     }else if (command == 7){//dm 
-    
+        char* target_name = strtok(NULL, " ");
+        char* mess = strtok(NULL, " ");
+        if (target_name == NULL || mess == NULL){
+            char *output = "invalid command";
+            send_to(output, client_socket); 
+            return 0;
+        }
+        struct user *receiver =  find_user_name( target_name,   users);
+        if (receiver== NULL){
+            char *output = "invalid receiver";
+            send_to(output, client_socket); 
+            return 0;
+        }
+        if (receiver->logged_in == false || receiver->sock == INVALID_SOCKET){
+            char *output = "receiver cannot be reached";
+            send_to(output, client_socket); 
+            return 0;
+        }
+        char output[BUFFER_SIZE];
+        bzero(output, BUFFER_SIZE); 
+        strcpy(output,sender->name);
+        // perror("4");
+        //char * mm = strtok(NULL, " ");
+        char * pp = ": DM :";
+        strcat(output, pp);
+        //strcat(output, mm);
+        strcat(output, mess);
+        // perror("6");
+        send_to(output, receiver->sock);
+        return 0;
+
 
     }else if (command == 8){//kick 
 
